@@ -465,7 +465,10 @@
                             $('#securityAmount').prop('disabled', true);
                             $('#securityInstitution').prop('disabled', true);
                             tenderSubmitted = true;
-                            $('#submit_first').empty().append('View')
+                            $('#attachments').prop('disabled', true);
+                            $('#attachmentCode').prop('disabled', true);
+                            $('#submit_first').empty().append('View');
+                            $('#attachSubmit').prop('disabled', true);
                             $('#submitForm').hide();
                             $('#app_sent').show();
                         }
@@ -758,6 +761,7 @@
                 type: "GET",
                 dataType: "json",
                 success: function (data) {
+                    console.log(data)
                     if (data.length > 0) {
                         let options = '';
                         for (var i = 0; i < data.length; i++) {

@@ -54,6 +54,7 @@ class TenderDetail(UserObjectMixins,View):
             username = 'None'
             current_datetime = datetime.now()  
             applicable = False
+            ContactPage = False
             if 'authenticated' in request.session:
                 authenticated = request.session['authenticated']
                 if 'Name' in request.session:
@@ -87,7 +88,8 @@ class TenderDetail(UserObjectMixins,View):
             'username':username,
             'lines':lines,
             'applicable':applicable,
-            "file":allFiles
+            "file":allFiles,
+            'ContactPage':ContactPage
         }
         return render(request,'tenders/detail.html',ctx)
 
@@ -300,25 +302,31 @@ def Logout(request):
     except Exception as e:
         print(e)
         return redirect('index')
+    
 class TechnicalRequirements(UserObjectMixins,View):
     async def get(self,request,pk):
         try:
-            required_files = []       
+            required_files = []   
+            attached = [] 
+            userID = await sync_to_async(request.session.__getitem__)('UserId')   
+            docFormat = f'{userID}#{pk}'
             async with aiohttp.ClientSession() as session:
                 task_get_docs = asyncio.ensure_future(self.simple_one_filtered_data(session,
                                          "/QyProcurementRequiredDocuments","QuoteNo","eq",pk))
-                task_get_attached = asyncio.ensure_future(self.simple_one_filtered_data(session,
-                                                                '/QyDocumentAttachments','No_','eq',pk))
-                response = await asyncio.gather(task_get_docs,task_get_attached)
-    
-                attached = [x for x in response[1]]  
+                response = await asyncio.gather(task_get_docs)
                 required_files = [x for x in response[0]]
+                
+                attachURL = config.O_DATA.format("/QyDocumentAttachments")
+                responses = self.get_object(attachURL)
+                
+                attached = [x for x in responses['value'] if x['No_'] == docFormat]
+                
                 if attached:
                     required_files = [d for d in required_files if all(d.get('DocumentCode') != a.get('File_Name') for a in attached)]
                 else:
                     required_files = required_files
+                    
                 return JsonResponse(required_files, safe=False)
-
         except Exception as e:
             logging.exception(e)
             return JsonResponse({'error': str(e)}, safe=False)
@@ -344,9 +352,10 @@ class Attachments(UserObjectMixins,View):
             tableID =52177788 
             fileName = request.POST.get("attachmentCode")
             response = False
+            docID = f'{userID}#{pk}'
             for file in attachments:
                 attachment = base64.b64encode(file.read())
-                response = self.upload_attachment(pk, fileName, attachment,
+                response = self.upload_attachment(docID, fileName, attachment,
                                                 tableID, userID)
             if response is not None:
                 if response == True:
@@ -360,6 +369,7 @@ class Attachments(UserObjectMixins,View):
             error = "Upload failed: {}".format(e)
             logging.exception(e)
             return JsonResponse({'success': False, 'error': error})
+        
 class DeleteAttachment(UserObjectMixins,View):
     def post(self,request):
         try:
@@ -430,9 +440,18 @@ class Submit(UserObjectMixins,View):
                 procurementMethod = 3
             
             docID = pk
-            response = self.make_soap_request('FnSupplierSubmitResponse',prospectNo,
+            task_get_prospect = self.double_filtered_data("/QyProspectiveSupplierTender",
+                                                          "Tender_No_","eq",docID,
+                                                          "and","Vendor_No","eq",prospectNo)
+            
+            prospect_number = [x for x in task_get_prospect[1]]
+            if procurementMethod == 1 or procurementMethod == 2:
+                Prospect_No_ = prospect_number[0]['Prospect_No_']
+            else:
+                Prospect_No_ = prospect_number[0]['Vendor_No']
+                      
+            response = self.make_soap_request('FnSupplierSubmitResponse',Prospect_No_,
                                             procurementMethod,docID)
-            print(response)
             if response == True:
                 return JsonResponse({'success': True, 'message': 'Submitted successfully'})
             return JsonResponse({'success': False, 'message': f'Not sent, try again'})
