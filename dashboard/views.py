@@ -331,23 +331,20 @@ class TechnicalRequirements(UserObjectMixins,View):
             logging.exception(e)
             return JsonResponse({'error': str(e)}, safe=False)
 class Attachments(UserObjectMixins,View):
-    async def get(self,request,pk):
+    def get(self,request,pk):
         try:
-            Attachments = []         
-            async with aiohttp.ClientSession() as session:
-                task_get_leave_attachments = asyncio.ensure_future(self.simple_one_filtered_data(session,
-                                         "/QyDocumentAttachments","No_","eq",pk))
-
-                response = await asyncio.gather(task_get_leave_attachments)
-
-                Attachments = [x for x in response[0]]
-                return JsonResponse(Attachments, safe=False)
+            Attachments = []   
+            userID = request.session['UserId']    
+            attachURL = config.O_DATA.format(f"/QyDocumentAttachments?$filter=No_%20eq%20%27{userID}%23{pk}%27")
+            response = self.get_object(attachURL) 
+            Attachments = [x for x in response['value']]
+            return JsonResponse(Attachments, safe=False)
         except Exception as e:
             logging.exception(e)
             return JsonResponse({'error': str(e)}, safe=False)
-    async def post(self, request, pk):
+    def post(self, request, pk):
         try:
-            userID = await sync_to_async(request.session.__getitem__)('UserId')
+            userID = request.session['UserId']   
             attachments = request.FILES.getlist('attachment')
             tableID =52177788 
             fileName = request.POST.get("attachmentCode")
@@ -377,6 +374,7 @@ class DeleteAttachment(UserObjectMixins,View):
             tableID= int(request.POST.get('tableID'))
             leaveCode = request.POST.get('leaveCode')
             response = self.delete_attachment(leaveCode,docID,tableID)
+            print(response)
             if response == True:
                 return JsonResponse({'success': True, 'message': 'Deleted successfully'})
             return JsonResponse({'success': False, 'message': f'{response}'})
