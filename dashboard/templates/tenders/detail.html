@@ -126,6 +126,15 @@
                                             <div class="accordion-body collapse show" id="panel-body-2"
                                                 data-parent="#accordion">
                                                 <p class="mb-0">
+                                                    {% if response.Description %}
+                                                    <h5 class="text-bold my-3">{{response.Process_Type}} Description
+                                                    </h5>
+                                                    <p>
+                                                        {{response.Description}}.
+                                                    </p>
+                                                    {% endif %}
+                                                </p>
+                                                <p class="mb-0">
                                                     {% if response.Instructions %}
                                                     <h5 class="text-bold my-3">{{response.Process_Type}} Instructions
                                                     </h5>
@@ -185,11 +194,18 @@
                             </div>
                         </div>
                         <div class="table-responsive" id="itemsTable">
-                            <h6>Procurement Items</h6>
+                            <h6>
+                                {% if response.Fixed_Asset_Disposal == True and response.TenderType == 'Open Tender' %}
+                                Disposal Items
+                                {% else %}
+                                Procurement Items
+                                {% endif %}
+                            </h6>
                             <table class="table table-striped" id="line_table">
                                 <thead>state
                                     <tr>
                                         <th>Description</th>
+                                        <th>Specifications</th>
                                         <th>Unit of Measure</th>
                                         <th>Quantity</th>
                                     </tr>
@@ -198,6 +214,7 @@
                                     {% for line in lines %}
                                     <tr>
                                         <td>{{line.Description}}</td>
+                                        <td>{{line.Specifications}}</td>
                                         <td>{{line.UnitofMeasure}}</td>
                                         <td>{{line.Quantity}} </td>
                                     </tr>
@@ -235,9 +252,11 @@
                                 <img src="https://upload.wikimedia.org/wikipedia/commons/b/b1/Loading_icon.gif"
                                     alt="Loading Gif" style="height: 100px; width: 100px;" class="img-fluid">
                             </div>
+                            {% if response.Process_Type != 'RFQ' %}
                             <div class="tab">
                                 <h5 class="modal-title text-center">{{response.Process_Type}} Security
                                 </h5>
+
                                 <form method="POST" novalidate id="securityForm">
                                     {% csrf_token %}
                                     <input type="hidden" name="Process_Type" id="Process_Type"
@@ -246,9 +265,12 @@
                                         value="{{response.TenderType}}">
                                     <input type="hidden" name="docNo" id="docNo" value="{{response.No}}">
                                     <input type="hidden" name="myAction" id="myAction" value="insert">
-
                                     <div class="form-group">
+                                        {% if response.Fixed_Asset_Disposal == True and response.TenderType == 'Open Tender' %}
                                         <label>Security Institution</label>
+                                        {% else %}
+                                        <label>Security Institution</label>
+                                        {% endif %}
                                         <div class="input-group">
                                             <div class="input-group-prepend">
                                                 <div class="input-group-text">
@@ -259,6 +281,7 @@
                                                 id="securityInstitution" required>
                                         </div>
                                     </div>
+
                                     <div class="form-group">
                                         <label>Security Amount</label>
                                         <div class="input-group">
@@ -278,6 +301,7 @@
                                     </div>
                                 </form>
                             </div>
+                            {% endif %}
                             <div class="tab">
                                 <h5 class="modal-title text-center">Financial Bid
                                 </h5>
@@ -396,7 +420,9 @@
                             </div>
                             <!-- Circles which indicates the steps of the form: -->
                             <div style="text-align:center;margin-top:40px;">
+                                {% if response.Process_Type != 'RFQ' %}
                                 <span class="step"></span>
+                                {% endif %}
                                 <span class="step"></span>
                                 <span class="step"></span>
                                 <span class="step"></span>
@@ -489,6 +515,25 @@
                 },
             });
         }
+        if ('{{response.Fixed_Asset_Disposal}}' === 'True' && '{{response.TenderType}}' === 'Open Tender') {
+            $.ajax({
+                type: 'get',
+                url: '{% url "Receipts" %}',
+                dataType: 'json',
+                data: {
+                    RequisitionNo: '{{response.RequisitionNo}}'
+                },
+                success: function (response) {
+                    $('#securityInstitution').prop('disabled', true);
+                    $('#securityInstitution').val(response['No_']);
+                    $('#securityAmount').prop('disabled', true);
+                    $('#securityAmount').val(response['Receipt_Amount']);
+                },
+                error: function (response) {
+                    console.log('Something went wrong');
+                }
+            });
+        }
         $securityForm.on("submit", (e) => {
             e.preventDefault();
             if ($('#securityInstitution').val() === '' || $('#securityAmount').val() === '') {
@@ -559,6 +604,12 @@
                 success: function (data) {
                     var openTableBody = $('#open_table tbody');
                     openTableBody.empty();
+
+                    if (data.length < 1 && tenderSubmitted == false &&
+                        '{{response.Process_Type}}' == 'RFQ') {
+                        get_rfq_lines();
+
+                    }
 
                     for (var i = 0; i < data.length; i++) {
                         var Line_No = data[i].Line_No;
@@ -1004,6 +1055,7 @@
                         $('#submit_first').empty().append('View');
                         $submitForm.hide();
                         $('#app_sent').show();
+                        window.location.href = "/dashboard/";
                     } else {
                         iziToast.show({
                             theme: 'dark',
@@ -1042,6 +1094,53 @@
                     "h:mm:ss a")
                 .format(
                     'h:mm a'));
+
+        function getCookie(name) {
+            var cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                var cookies = document.cookie.split(';');
+                for (var i = 0; i < cookies.length; i++) {
+                    var cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+
+        function get_rfq_lines() {
+            var csrftoken = getCookie('csrftoken');
+            $.ajax({
+                url: "/FnCreateProspectiveSupplier/",
+                type: "POST",
+                data: {
+                    Process_Type: '{{response.Process_Type}}',
+                    docNo: '{{response.No}}',
+                    securityInstitution: '',
+                    securityAmount: 0,
+                    myAction: 'insert',
+                    TenderType: 'RFQ',
+                },
+                headers: {
+                    'X-CSRFToken': csrftoken
+                },
+                success: function (data) {
+                    if (data['success'] == true) {
+                        console.log(true);
+                        FinancialData(documentID);
+                    } else {
+                        console.log(false);
+                    }
+                },
+                error: function (xhr, textStatus, errorThrown) {
+                    console.log(xhr.responseText);
+                }
+            });
+        }
+
     })
     var currentTab = 0; // Current tab is set to be the first tab (0)
     showTab(currentTab); // Display the current tab

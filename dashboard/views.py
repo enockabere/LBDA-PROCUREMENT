@@ -101,6 +101,7 @@ class Dashboard(UserObjectMixins,View):
             state = 'Prospect'
             ContactPage = False
             current_datetime = datetime.now()  
+            pre_qualified_list = []
             if 'authenticated' in request.session:
                 authenticated = request.session['authenticated']
             else:
@@ -109,47 +110,7 @@ class Dashboard(UserObjectMixins,View):
                 username = request.session['Name']
             else:
                 username = request.session['Email']
-            ProcURL = config.O_DATA.format("/QyProcurementMethods?$filter=SubmittedToPortal%20eq%20true")
-            response = self.get_object(ProcURL)
-            open_tenders = [x for x in response['value'] if x['TenderType'] == 'Open Tender'
-                            and x['Status'] == 'New' and datetime.strptime(x['Quotation_Deadline'] 
-                                + ' ' + x['Expected_Closing_Time'],'%Y-%m-%d %H:%M:%S') >= current_datetime
-                            and datetime.strptime(x['Release_Date'] + 
-                                    ' ' + x['Release_Time'],'%Y-%m-%d %H:%M:%S') <= current_datetime]
-            open_restricted = [x for x in response['value'] if x['TenderType'] == 'Restricted Tender'
-                               and x['Status'] == 'New' and datetime.strptime(x['Quotation_Deadline'] + 
-                                    ' ' + x['Expected_Closing_Time'],'%Y-%m-%d %H:%M:%S') >= current_datetime
-                               and datetime.strptime(x['Release_Date'] + 
-                                    ' ' + x['Release_Time'],'%Y-%m-%d %H:%M:%S') <= current_datetime]
-            open_quotation = [x for x in response['value'] if x['Process_Type'] == 'RFQ' and x['Status'] == 'New' 
-                              and datetime.strptime(x['Quotation_Deadline'] + ' ' 
-                                + x['Expected_Closing_Time'],'%Y-%m-%d %H:%M:%S') >= current_datetime
-                              and datetime.strptime(x['Release_Date'] + 
-                                    ' ' + x['Release_Time'],'%Y-%m-%d %H:%M:%S') <= current_datetime]
-            open_interest = [x for x in response['value'] if x['Process_Type'] == 'EOI' and x['Status'] == 'New' 
-                            and datetime.strptime(x['Quotation_Deadline'] + ' ' 
-                                                  + x['Expected_Closing_Time'],'%Y-%m-%d %H:%M:%S') >= current_datetime
-                            and datetime.strptime(x['Release_Date'] + 
-                                    ' ' + x['Release_Time'],'%Y-%m-%d %H:%M:%S') <= current_datetime]
-            open_proposal = [x for x in response['value'] if x['Process_Type'] == 'RFP' 
-                             and x['Status'] == 'New' and datetime.strptime(x['Quotation_Deadline'] +
-                                ' ' + x['Expected_Closing_Time'],'%Y-%m-%d %H:%M:%S') >= current_datetime
-                             and datetime.strptime(x['Release_Date'] + 
-                                    ' ' + x['Release_Time'],'%Y-%m-%d %H:%M:%S') <= current_datetime]
-            total_open = len([x for x in response['value'] if x['Status'] == 'New' 
-                              and datetime.strptime(x['Quotation_Deadline'] + ' ' + 
-                                 x['Expected_Closing_Time'],'%Y-%m-%d %H:%M:%S') >= current_datetime
-                              and datetime.strptime(x['Release_Date'] + 
-                                    ' ' + x['Release_Time'],'%Y-%m-%d %H:%M:%S') <= current_datetime])
-            total_closed = len([x for x in response['value'] if x['Status'] == 'Archived'])
-            
-            all_tenders = [x for x in response['value'] if x['Status'] == 'New' 
-                           and datetime.strptime(x['Quotation_Deadline'] + ' ' 
-                                                 + x['Expected_Closing_Time'],'%Y-%m-%d %H:%M:%S') >= current_datetime
-                           and datetime.strptime(x['Release_Date'] + 
-                                    ' ' + x['Release_Time'],'%Y-%m-%d %H:%M:%S') <= current_datetime]
-            
-            
+                
             if 'UserId' in request.session:
                 VendorNo = request.session['UserId']
                 submitted = self.one_filter("/QyProspectiveSupplierTender","Vendor_No","eq",VendorNo)
@@ -160,9 +121,69 @@ class Dashboard(UserObjectMixins,View):
                 submitted_interest = [x for x in submitted[1] if x['Type'] == 'EOI']
                 submitted_proposal = [x for x in submitted[1] if x['Type'] == 'RFP']
                 total_submitted = len([x for x in submitted[1]])
+                res_selected = self.one_filter("/QySelectedSuppliers","Supplier_Code","eq",VendorNo)
+                    
+                for item in res_selected[1]:
+                    reference_no = item.get("Reference_No_")
+                    if reference_no:
+                        pre_qualified_list.append(reference_no)
+                        
             if 'state' in request.session:
                 state = request.session['state']
                 
+            applied_list = []
+                
+            applied = self.one_filter("/QyProspectiveSupplierTender","Vendor_No","eq",VendorNo)
+            for item in applied[1]:
+                Tender_No_ = item.get("Tender_No_")
+                if Tender_No_:
+                    applied_list.append(Tender_No_)
+                
+            
+            ProcURL = config.O_DATA.format("/QyProcurementMethods?$filter=SubmittedToPortal%20eq%20true")
+            response = self.get_object(ProcURL)
+            open_tenders = [x for x in response['value'] if x['TenderType'] == 'Open Tender'
+                            and x['Status'] == 'New' and datetime.strptime(x['Quotation_Deadline'] 
+                                + ' ' + x['Expected_Closing_Time'],'%Y-%m-%d %H:%M:%S') >= current_datetime
+                            and datetime.strptime(x['Release_Date'] + 
+                                    ' ' + x['Release_Time'],'%Y-%m-%d %H:%M:%S') <= current_datetime and x['No'] not in applied_list]
+            open_restricted = [x for x in response['value'] if x['TenderType'] == 'Restricted Tender'
+                               and x['Status'] == 'New' and datetime.strptime(x['Quotation_Deadline'] + 
+                                    ' ' + x['Expected_Closing_Time'],'%Y-%m-%d %H:%M:%S') >= current_datetime
+                               and datetime.strptime(x['Release_Date'] + 
+                                    ' ' + x['Release_Time'],'%Y-%m-%d %H:%M:%S')
+                               <= current_datetime and  x['No'] in pre_qualified_list and x['No'] not in applied_list]
+            open_quotation = [x for x in response['value'] if x['Process_Type'] == 'RFQ' and x['Status'] == 'New' 
+                              and datetime.strptime(x['Quotation_Deadline'] + ' ' 
+                                + x['Expected_Closing_Time'],'%Y-%m-%d %H:%M:%S') >= current_datetime
+                              and datetime.strptime(x['Release_Date'] + 
+                                    ' ' + x['Release_Time'],'%Y-%m-%d %H:%M:%S') 
+                              <= current_datetime and  x['No'] in pre_qualified_list and x['No'] not in applied_list]
+            open_interest = [x for x in response['value'] if x['Process_Type'] == 'EOI' and x['Status'] == 'New' 
+                            and datetime.strptime(x['Quotation_Deadline'] + ' ' 
+                                                  + x['Expected_Closing_Time'],'%Y-%m-%d %H:%M:%S') >= current_datetime
+                            and datetime.strptime(x['Release_Date'] + 
+                                    ' ' + x['Release_Time'],'%Y-%m-%d %H:%M:%S')
+                            <= current_datetime and  x['No'] in pre_qualified_list and x['No'] not in applied_list]
+            open_proposal = [x for x in response['value'] if x['Process_Type'] == 'RFP' 
+                             and x['Status'] == 'New' and datetime.strptime(x['Quotation_Deadline'] +
+                                ' ' + x['Expected_Closing_Time'],'%Y-%m-%d %H:%M:%S') >= current_datetime
+                             and datetime.strptime(x['Release_Date'] + 
+                                    ' ' + x['Release_Time'],'%Y-%m-%d %H:%M:%S')
+                             <= current_datetime and  x['No'] in pre_qualified_list and x['No'] not in applied_list]
+            total_open = len([x for x in response['value'] if x['Status'] == 'New' 
+                              and datetime.strptime(x['Quotation_Deadline'] + ' ' + 
+                                 x['Expected_Closing_Time'],'%Y-%m-%d %H:%M:%S') >= current_datetime
+                              and datetime.strptime(x['Release_Date'] + 
+                                    ' ' + x['Release_Time'],'%Y-%m-%d %H:%M:%S') <= current_datetime and x['No'] not in applied_list])
+            total_closed = len([x for x in response['value'] if x['Status'] == 'Archived'])
+            
+            all_tenders = [x for x in response['value'] if x['Status'] == 'New' 
+               and datetime.strptime(x['Quotation_Deadline'] + ' ' + x['Expected_Closing_Time'], 
+               '%Y-%m-%d %H:%M:%S') >= current_datetime 
+               and datetime.strptime(x['Release_Date'] + ' ' + x['Release_Time'], '%Y-%m-%d %H:%M:%S') <= current_datetime 
+               and (x['TenderType'] == 'Open Tender' or x['No'] in pre_qualified_list)
+               and x['No'] not in applied_list]                
         except Exception as e:
             logging.exception(e)
             messages.error(request, f'{e}')
@@ -372,6 +393,7 @@ class DeleteAttachment(UserObjectMixins,View):
         try:
             docID = int(request.POST.get('docID'))
             tableID= int(request.POST.get('tableID'))
+            print(tableID)
             leaveCode = request.POST.get('leaveCode')
             response = self.delete_attachment(leaveCode,docID,tableID)
             print(response)
@@ -443,11 +465,8 @@ class Submit(UserObjectMixins,View):
                                                           "and","Vendor_No","eq",prospectNo)
             
             prospect_number = [x for x in task_get_prospect[1]]
-            if procurementMethod == 1 or procurementMethod == 2:
-                Prospect_No_ = prospect_number[0]['Prospect_No_']
-            else:
-                Prospect_No_ = prospect_number[0]['Vendor_No']
-                      
+            Prospect_No_ = prospect_number[0]['Prospect_No_']
+                     
             response = self.make_soap_request('FnSupplierSubmitResponse',Prospect_No_,
                                             procurementMethod,docID)
             if response == True:
@@ -483,3 +502,25 @@ class viewDocs(UserObjectMixins,View):
         except Exception as e:
             messages.info(request, f'{e}')
             return redirect('index')
+        
+class Receipts(View, UserObjectMixins):
+    async def get(self, request):
+        try:
+            RequisitionNo = request.GET.get('RequisitionNo')
+            async with aiohttp.ClientSession() as session:
+                task = asyncio.ensure_future(self.simple_one_filtered_data(session,'/QyReceiptHeaders',
+                                                                'Payment_For_Code', 'eq', RequisitionNo))
+
+                response = await asyncio.gather(task)
+                for receipt in response[0]:
+                    if receipt['Payment_For_Code'] == RequisitionNo:
+                        No_ = receipt['No_']
+                        Receipt_Amount = receipt['Receipt_Amount']
+                return JsonResponse({
+                    'success': True,
+                    "No_":No_,
+                    "Receipt_Amount":Receipt_Amount,
+                    }, safe=False)
+        except Exception as e:
+            logging.exception(e)
+            return JsonResponse({'success': False,'response':str(e)}, safe=False)

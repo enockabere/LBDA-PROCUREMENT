@@ -1,221 +1,96 @@
-FnResetPassword (Return a Boolean)
+class Dashboard(UserObjectMixins,View):
+def get(self,request):
+try:
+ctx = {}
+state = 'Prospect'
+ContactPage = False
+current_datetime = datetime.now()
+pre_qualified_list = []
+if 'authenticated' in request.session:
+authenticated = request.session['authenticated']
+else:
+authenticated = False
+if 'Name' in request.session:
+username = request.session['Name']
+else:
+username = request.session['Email']
 
-Add Verified to Vendors
+if 'UserId' in request.session:
+VendorNo = request.session['UserId']
+submitted = self.one_filter("/QyProspectiveSupplierTender","Vendor_No","eq",VendorNo)
+all_submitted = [x for x in submitted[1]]
+submitted_open = [x for x in submitted[1] if x['Type'] == 'Tender']
+submitted_restricted = [x for x in submitted[1] if x['Type'] == 'Restricted']
+submitted_quotation = [x for x in submitted[1] if x['Type'] == 'RFQ']
+submitted_interest = [x for x in submitted[1] if x['Type'] == 'EOI']
+submitted_proposal = [x for x in submitted[1] if x['Type'] == 'RFP']
+total_submitted = len([x for x in submitted[1]])
+res_selected = self.one_filter("/QySelectedSuppliers","Supplier_Code","eq",VendorNo)
 
-how do i filter documents by user_id
+for item in res_selected[1]:
+reference_no = item.get("Reference_No_")
+if reference_no:
+pre_qualified_list.append(reference_no)
 
-QyProspectiveSupplierTender is not modifying for vendors
+if 'state' in request.session:
+state = request.session['state']
 
-QySupplierTenderLines is duplicated when i modify
+applied_list = []
 
-<div class="row" id="step1">
-    <div class="col-md-12">
-        <h5 class="modal-title text-center">{{response.Process_Type}} Security
-        </h5>
-        <div class="money-spinner mx-auto text-center" id="security_spinner" style="display: none;">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/b/b1/Loading_icon.gif" alt="Loading Gif"
-                style="height: 100px; width: 100px;" class="img-fluid">
-        </div>
-        <form method="POST" novalidate id="securityForm">
-            {% csrf_token %}
-            <input type="hidden" name="Process_Type" id="Process_Type" value="{{response.Process_Type}}">
-            <input type="hidden" name="TenderType" id="TenderType" value="{{response.TenderType}}">
-            <input type="hidden" name="docNo" id="docNo" value="{{response.No}}">
-            <input type="hidden" name="myAction" id="myAction" value="insert">
-
-            <div class="form-group">
-                <label>Security Institution</label>
-                <div class="input-group">
-                    <div class="input-group-prepend">
-                        <div class="input-group-text">
-                            <i class="fas fa-university"></i>
-                        </div>
-                    </div>
-                    <input type="text" class="form-control" name="securityInstitution" id="securityInstitution"
-                        required>
-                </div>
-            </div>
-            <div class="form-group">
-                <label>Security Amount</label>
-                <div class="input-group">
-                    <div class="input-group-prepend">
-                        <div class="input-group-text">
-                            <i class="fas fa-lock"></i>
-                        </div>
-                    </div>
-                    <input type="text" class="form-control" placeholder="00.00" name="securityAmount"
-                        id="securityAmount" required>
-                </div>
-            </div>
-            <div class="form-group controlBtn my-2">
-                <button type="submit" class="btn btn-primary mr-1 w-50" id="submitSecurity">
-                    Submit <span class="icon"><i class="fas fa-paper-plane"></i></span>
-                </button>
-                <button type="button" class="btn btn-warning ml-1" id="nextOne">
-                    Next <i class="fas fa-forward"></i>
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-<div class="row" id="step2" style="display: none;">
-    <div class="col-md-12">
-        <h5 class="modal-title text-center">Financial Bid
-        </h5>
-        <div class="money-spinner mx-auto text-center" id="financial_spinner" style="display: none;">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/b/b1/Loading_icon.gif" alt="Loading Gif"
-                style="height: 100px; width: 100px;" class="img-fluid">
-        </div>
-        <div class="table-responsive">
-            <table class="table table-striped" id="open_table">
-                <thead>
-                    <tr>
-                        <th class="text-center">
-                            Description
-                        </th>
-                        <th>Unit of Measure</th>
-                        <th>Quantity</th>
-                        <th>Unit Price</th>
-                        <th>Amount</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td></td>
-                        <td></td>
-                        <td> </td>
-                        <td> </td>
-                        <td> </td>
-                        <td> </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-        <div class="form-group controlBtn my-2">
-            <button type="button" class="btn btn-primary mr-1" id="prevOne">
-                <i class="fas fa-backward"></i> Prev
-            </button>
-            <button type="button" class="btn btn-warning ml-1" id="nextTwo">
-                Next <i class="fas fa-forward"></i>
-            </button>
-        </div>
-    </div>
-</div>
-<div class="row" id="step3" style="display:none">
-    <div class="col-md-12 p-2" style="border: 2px dotted black;" id="techStep">
-        <h5 class="modal-title text-center">{{response.Process_Type}} Technical
-            Requirements
-        </h5>
-        <div class="money-spinner mx-auto text-center" id="attachment_spinner" style="display: none;">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/b/b1/Loading_icon.gif" alt="Loading Gif"
-                style="height: 100px; width: 100px;" class="img-fluid">
-        </div>
-        <form method="post" id="attachmentsForm" enctype="multipart/form-data">
-            {% csrf_token %}
-            <div class="form-group" id="attachmentCodeRow">
-                <label>Select Document to Upload <span class="text-danger">*</span></label>
-                <select class="custom-select" name="attachmentCode" id="attachmentCode">
-                    <option class="after" value="" disabled>--Select--</option>
-                </select>
-            </div>
-            <div class="custom-file" id="attachmentsRow">
-                <input type="file" class="custom-file-input" name="attachments" id="attachments">
-                <label class="custom-file-label" for="customFile">Choose
-                    file</label>
-            </div>
-            <div style="display:flex; justify-content:space-between;" class="my-3">
-                <button type="submit" class="btn btn-primary btn-lg mr-1" id="attachSubmit" style="flex:1;">
-                    Upload <i class="fas fa-file-upload"></i>
-                </button>
-                <button class="btn btn-dark mr-1" type="button" id="attachmentBtn" style="flex:1;display:none">
-                    View <span id="attachementCount"></span> Attachments <i class="fas fa-eye"></i>
-                </button>
-            </div>
-        </form>
-        <div class="row" id="leave_attachments_row" style="display:none">
-            <div class="col-md-12">
-                <h5 class="">
-                    Attached Files <i class="las la-folder-open text-success"></i>
-                </h5>
-                <div class="row" id="attachments-container">
-
-                </div>
-            </div>
-        </div>
-        <div class="form-group controlBtn my-2">
-            <button type="button" class="btn btn-primary mr-1" id="prev2">
-                <i class="fas fa-backward"></i> Prev
-            </button>
-            <button type="button" class="btn btn-warning ml-1" id="next3" style="display:none">
-                Next <i class="fas fa-forward"></i>
-            </button>
-        </div>
-    </div>
-    <div class="col-md-12 p-2 my-3" style="border: 2px dotted black;" id="step4" style="display: none;">
-
-        <div class="money-spinner mx-auto text-center" id="submit_spinner" style="display: none;">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/b/b1/Loading_icon.gif" alt="Loading Gif"
-                style="height: 100px; width: 100px;" class="img-fluid">
-        </div>
+applied = self.one_filter("/QyProspectiveSupplierTender","Vendor_No","eq",VendorNo)
+for item in applied[1]:
+Tender_No_ = item.get("Tender_No_")
+if Tender_No_:
+applied_list.append(Tender_No_)
 
 
-        <div class="form-group controlBtn my-2">
-            <button type="button" class="btn btn-primary mr-1" id="prev3">
-                <i class="fas fa-backward"></i> Prev
-            </button>
-        </div>
-    </div>
-</div>
-
-
-<div class="tab no_attachment">
-    <h5 class="modal-title text-center">{{response.Process_Type}} Technical
-        Requirements
-    </h5>
-    <form method="post" id="attachmentsForm" enctype="multipart/form-data">
-        {% csrf_token %}
-        <div class="form-group" id="attachmentCodeRow">
-            <label>Select Document to Upload <span class="text-danger">*</span></label>
-            <select class="custom-select" name="attachmentCode" id="attachmentCode">
-                <option class="after" value="" disabled>--Select--</option>
-            </select>
-        </div>
-        <div class="custom-file" id="attachmentsRow">
-            <input type="file" class="custom-file-input" name="attachments" id="attachments">
-            <label class="custom-file-label" for="customFile">Choose
-                file</label>
-        </div>
-        <div style="display:flex; justify-content:space-between;" class="my-3">
-            <button type="submit" class="btn btn-primary btn-lg mr-1" id="attachSubmit" style="flex:1;">
-                Upload <i class="fas fa-file-upload"></i>
-            </button>
-            <!-- <button class="btn btn-dark mr-1" type="button" id="attachmentBtn"
-                                            style="flex:1;display:none">
-                                            View <span id="attachementCount"></span> Attachments <i
-                                                class="fas fa-eye"></i>
-                                        </button> -->
-        </div>
-    </form>
-    <!-- <div class="row" id="leave_attachments_row" style="display:none">
-                                    <div class="col-md-12">
-                                        <h5 class="">
-                                            Attached Files <i class="las la-folder-open text-success"></i>
-                                        </h5>
-                                        <div class="row" id="attachments-container">
-
-                                        </div>
-                                    </div>
-                                </div> -->
-</div>
-
-
-<div style="text-align:center;margin-top:40px;">
-    <span class="step"></span>
-    <span class="step"></span>
-    <span class="step attach_step"></span>
-    <span class="step"></span>
-</div>
-
-$('.no_attachment').hide();
-$('.attach_step').hide();
+ProcURL = config.O_DATA.format("/QyProcurementMethods?$filter=SubmittedToPortal%20eq%20true")
+response = self.get_object(ProcURL)
+open_tenders = [x for x in response['value'] if x['TenderType'] == 'Open Tender'
+and x['Status'] == 'New' and datetime.strptime(x['Quotation_Deadline']
++ ' ' + x['Expected_Closing_Time'],'%Y-%m-%d %H:%M:%S') >= current_datetime
+and datetime.strptime(x['Release_Date'] +
+' ' + x['Release_Time'],'%Y-%m-%d %H:%M:%S') <= current_datetime and x['No'] not in applied_list] open_restricted=[x for
+    x in response['value'] if x['TenderType']=='Restricted Tender' and x['Status']=='New' and
+    datetime.strptime(x['Quotation_Deadline'] + ' ' + x['Expected_Closing_Time'],'%Y-%m-%d %H:%M:%S')>= current_datetime
+    and datetime.strptime(x['Release_Date'] +
+    ' ' + x['Release_Time'],'%Y-%m-%d %H:%M:%S')
+    <= current_datetime and x['No'] in pre_qualified_list and x['No'] not in applied_list] open_quotation=[x for x in
+        response['value'] if x['Process_Type']=='RFQ' and x['Status']=='New' and
+        datetime.strptime(x['Quotation_Deadline'] + ' ' + x['Expected_Closing_Time'],'%Y-%m-%d %H:%M:%S')>=
+        current_datetime
+        and datetime.strptime(x['Release_Date'] +
+        ' ' + x['Release_Time'],'%Y-%m-%d %H:%M:%S')
+        <= current_datetime and x['No'] in pre_qualified_list and x['No'] not in applied_list] open_interest=[x for x in
+            response['value'] if x['Process_Type']=='EOI' and x['Status']=='New' and
+            datetime.strptime(x['Quotation_Deadline'] + ' ' + x['Expected_Closing_Time'],'%Y-%m-%d %H:%M:%S')>=
+            current_datetime
+            and datetime.strptime(x['Release_Date'] +
+            ' ' + x['Release_Time'],'%Y-%m-%d %H:%M:%S')
+            <= current_datetime and x['No'] in pre_qualified_list and x['No'] not in applied_list] open_proposal=[x for
+                x in response['value'] if x['Process_Type']=='RFP' and x['Status']=='New' and
+                datetime.strptime(x['Quotation_Deadline'] + ' ' + x['Expected_Closing_Time'],'%Y-%m-%d %H:%M:%S')>=
+                current_datetime
+                and datetime.strptime(x['Release_Date'] +
+                ' ' + x['Release_Time'],'%Y-%m-%d %H:%M:%S')
+                <= current_datetime and x['No'] in pre_qualified_list and x['No'] not in applied_list] total_open=len([x
+                    for x in response['value'] if x['Status']=='New' and datetime.strptime(x['Quotation_Deadline'] + ' '
+                    + x['Expected_Closing_Time'],'%Y-%m-%d %H:%M:%S')>= current_datetime
+                    and datetime.strptime(x['Release_Date'] +
+                    ' ' + x['Release_Time'],'%Y-%m-%d %H:%M:%S') <= current_datetime and x['No'] not in applied_list])
+                        total_closed=len([x for x in response['value'] if x['Status']=='Archived' ]) all_tenders=[x for
+                        x in response['value'] if x['Status']=='New' and datetime.strptime(x['Quotation_Deadline'] + ' '
+                        + x['Expected_Closing_Time'], '%Y-%m-%d %H:%M:%S' )>= current_datetime
+                        and datetime.strptime(x['Release_Date'] + ' ' + x['Release_Time'], '%Y-%m-%d %H:%M:%S') <=
+                            current_datetime and (x['TenderType']=='Open Tender' or x['No'] in pre_qualified_list) and
+                            x['No'] not in applied_list] except Exception as e: logging.exception(e)
+                            messages.error(request, f'{e}') return redirect('index') ctx={ 'authenticated'
+                            :authenticated, "open_tenders" :open_tenders, 'username' :username, 'open_restricted'
+                            :open_restricted, 'open_quotation' :open_quotation, 'open_interest'
+                            :open_interest, 'open_proposal' :open_proposal, 'submitted_open'
+                            :submitted_open, 'submitted_restricted' :submitted_restricted, 'submitted_quotation'
+                            :submitted_quotation, 'submitted_interest' :submitted_interest, 'submitted_proposal'
+                            :submitted_proposal, 'total_submitted' :total_submitted, 'total_open'
+                            :total_open, 'total_closed' :total_closed, 'state' :state, 'ContactPage'
+                            :ContactPage, 'all_tenders' :all_tenders, 'all_submitted' :all_submitted } return
+                            render(request,'dashboard.html',ctx)
