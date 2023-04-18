@@ -183,7 +183,7 @@ class Dashboard(UserObjectMixins,View):
                '%Y-%m-%d %H:%M:%S') >= current_datetime 
                and datetime.strptime(x['Release_Date'] + ' ' + x['Release_Time'], '%Y-%m-%d %H:%M:%S') <= current_datetime 
                and (x['TenderType'] == 'Open Tender' or x['No'] in pre_qualified_list)
-               and x['No'] not in applied_list]                
+               and x['No'] not in applied_list]              
         except Exception as e:
             logging.exception(e)
             messages.error(request, f'{e}')
