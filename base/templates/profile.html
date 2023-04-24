@@ -53,85 +53,71 @@ My Profile
                                 <div class="slash"></div> {{state}}
                             </div>
                         </div>
-                        Kobby Technologies (www.kobby.co.ke) was founded in 2015 as a provider of consultancy services
-                        that help organizations get the maximum value from their IT investment. We are a young,
-                        progressive, and dynamic firm whose consultants have a wealth of experience of over 10 years in
-                        ICT disciplines and who are driven by the desire to provide consultancy advice that is
-                        responsive to our client's needs. We build relationships by providing services based on quality
-                        and integrity. We are particularly focused on ensuring that our work and the development of our
-                        business benefit the countries in which we work. In addition, we have a strategy and client
-                        service philosophy that ensures that our clients receive high-quality service delivery.
                     </div>
                 </div>
                 <div class="card">
                     <form method="post" class="needs-validation" novalidate="">
                         <div class="card-header">
-                            <h4>Edit Profile</h4>
+                            <h4>Profile</h4>
                         </div>
                         <div class="card-body">
                             <div class="row">
+                                {% if state == "Vendor" %}
                                 <div class="form-group col-md-6 col-12">
                                     <label>Supplier Name</label>
-                                    <input type="text" class="form-control" value="Enock Doe" required="">
+                                    <input type="text" class="form-control" placeholder="{{details.Name}}" disabled>
                                 </div>
                                 <div class="form-group col-md-6 col-12">
-                                    <label>Country <span class="text-danger">*</span></label>
-                                    <select class="form-control select2" name="countryRegionCode" required>
-                                        <option selected disabled value="0">--select--</option>
-                                        {% for country in countries %}
-                                        <option value="{{country.Code}}">{{country.Name}}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="form-group col-md-6 col-12">
-                                    <label for="frist_name">Contact Person Name <span
-                                            class="text-danger">*</span></label>
-                                    <input id="contactPersonName" type="text" class="form-control"
-                                        name="contactPersonName" autofocus required>
+                                    <label>Supplier Email</label>
+                                    <input type="text" class="form-control" placeholder="{{details.EMail}}" disabled>
                                 </div>
                                 <div class="form-group col-md-6 col-12">
-                                    <label for="last_name">Contact Person Phone No. (07 XX XX XX XX) <span
-                                            class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" name="contactPhoneNo" required>
+                                    <label>Supplier Post Code</label>
+                                    <input type="text" class="form-control" placeholder="{{details.PostCode}}" disabled>
                                 </div>
-                            </div>
-                            <div class="row">
-                                <div class="form-group col-12">
-                                    <label for="last_name">Contact Person Email <span
-                                            class="text-danger">*</span></label>
-                                    <input type="email" class="form-control" name="contactMail" required>
+                                <div class="form-group col-md-6 col-12">
+                                    <label>Supplier Postal Address</label>
+                                    <input type="text" class="form-control" placeholder="{{details.Address}}" disabled>
                                 </div>
-                            </div>
-                            <div class="row">
-                                <div class="form-group col-12">
-                                    <label>Bio</label>
-                                    <textarea class="form-control summernote-simple">
-                                        Kobby Technologies (www.kobby.co.ke) was founded in 2015 as a provider of consultancy 
-                                        services that help organizations get the maximum value from their IT investment.
-                                         We are a young, progressive, and dynamic firm whose consultants have a wealth
-                                          of experience of over 10 years in ICT disciplines and who are driven by the 
-                                      </textarea>
+                                <div class="form-group col-md-6 col-12">
+                                    <label>Supplier Phone No</label>
+                                    <input type="text" class="form-control" placeholder="{{details.PhoneNo}}" disabled>
                                 </div>
-                            </div>
-                            <div class="row">
-                                <div class="form-group mb-0 col-12">
-                                    <div class="custom-control custom-checkbox">
-                                        <input type="checkbox" name="remember" class="custom-control-input"
-                                            id="newsletter">
-                                        <label class="custom-control-label" for="newsletter">Subscribe to
-                                            newsletter</label>
-                                        <div class="text-muted form-text">
-                                            You will get new information about products, offers and promotions
-                                        </div>
-                                    </div>
+                                <div class="form-group col-md-6 col-12">
+                                    <label>Supplier City</label>
+                                    <input type="text" class="form-control" placeholder="{{details.City}}" disabled>
                                 </div>
+                                {% elif state == "Prospect" %}
+                                <div class="form-group col-md-6 col-12">
+                                    <label>Supplier Name</label>
+                                    <input type="text" class="form-control" placeholder="{{details.ContactPersonName}}"
+                                        disabled>
+                                </div>
+                                <div class="form-group col-md-6 col-12">
+                                    <label>Supplier Email</label>
+                                    <input type="text" class="form-control" placeholder="{{details.Email}}" disabled>
+                                </div>
+                                <div class="form-group col-md-6 col-12">
+                                    <label>Supplier Post Code</label>
+                                    <input type="text" class="form-control" placeholder="{{details.PostCode}}" disabled>
+                                </div>
+                                <div class="form-group col-md-6 col-12">
+                                    <label>Supplier Postal Address</label>
+                                    <input type="text" class="form-control" placeholder="{{details.PostalAddress}}"
+                                        disabled>
+                                </div>
+                                <div class="form-group col-md-6 col-12">
+                                    <label>Supplier Phone No</label>
+                                    <input type="text" class="form-control" placeholder="{{details.TelephoneNo}}"
+                                        disabled>
+                                </div>
+                                <div class="form-group col-md-6 col-12">
+                                    <label>Supplier City</label>
+                                    <input type="text" class="form-control" placeholder="{{details.City}}" disabled>
+                                </div>
+                                {% endif %}
+
                             </div>
-                        </div>
-                        <div class="card-footer text-right">
-                            <button class="btn btn-primary">Save Changes</button>
-                        </div>
                     </form>
                 </div>
             </div>

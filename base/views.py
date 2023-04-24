@@ -71,6 +71,7 @@ class Profile(UserObjectMixins,View):
             username = 'None'
             state = 'Prospect'
             ContactPage = True
+            details = {}
             if 'authenticated' in request.session:
                 authenticated = request.session['authenticated']
                 state =  request.session['state']
@@ -80,6 +81,14 @@ class Profile(UserObjectMixins,View):
                     username = request.session['Email']
             else:
                 authenticated = False
+            if request.session['state'] == "Vendor":
+                vendors = self.one_filter("/QyVendorDetails","EMail","eq",request.session['Email'] )
+                for vendor in vendors[1]:
+                    details = vendor
+            elif request.session['state'] == "Prospect":
+                prospect = self.one_filter("/QyProspectiveSuppliers","Email","eq",request.session['Email']) 
+                for prospect in prospect[1]:
+                    details = prospect
         except Exception as e:
             logging.exception(e)
             messages.error(request, f'{e}')
@@ -89,6 +98,7 @@ class Profile(UserObjectMixins,View):
             "response":response,
             'username':username,
             'ContactPage':ContactPage,
-            'state':state
+            'state':state,
+            "details":details
         }
         return render(request,'profile.html',ctx)
