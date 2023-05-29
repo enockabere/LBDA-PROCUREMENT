@@ -267,7 +267,7 @@
                                     <input type="hidden" name="myAction" id="myAction" value="insert">
                                     <div class="form-group">
                                         {% if response.Fixed_Asset_Disposal == True and response.TenderType == 'Open Tender' %}
-                                        <label>Security Institution</label>
+                                        <label>Bid Receipt No.</label>
                                         {% else %}
                                         <label>Security Institution</label>
                                         {% endif %}
@@ -516,22 +516,26 @@
             });
         }
         if ('{{response.Fixed_Asset_Disposal}}' === 'True' && '{{response.TenderType}}' === 'Open Tender') {
-            $.ajax({
-                type: 'get',
-                url: '{% url "Receipts" %}',
-                dataType: 'json',
-                data: {
-                    RequisitionNo: '{{response.RequisitionNo}}'
-                },
-                success: function (response) {
-                    $('#securityInstitution').prop('disabled', true);
-                    $('#securityInstitution').val(response['No_']);
-                    $('#securityAmount').prop('disabled', true);
-                    $('#securityAmount').val(response['Receipt_Amount']);
-                },
-                error: function (response) {
-                    console.log('Something went wrong');
-                }
+            $('#securityInstitution').on('keyup', function () {
+                var inputValue = $(this).val();
+                $.ajax({
+                    type: 'get',
+                    url: '/Receipts/',
+                    dataType: 'json',
+                    data: {
+                        RequisitionNo: '{{response.RequisitionNo}}',
+                        securityInstitution: inputValue
+                    },
+                    success: function (response) {
+                        //$('#securityInstitution').prop('disabled', false);
+                        //$('#securityInstitution').val(response['No_']);
+                        $('#securityAmount').prop('disabled', true);
+                        $('#securityAmount').val(response['Receipt_Amount']);
+                    },
+                    error: function (response) {
+                        console.log('Something went wrong');
+                    }
+                });
             });
         }
         $securityForm.on("submit", (e) => {
@@ -658,7 +662,23 @@
                                                         </div>\
                                                     </div>\
                                                     <input type="text" class="form-control" placeholder="00.00" value=""\
-                                                        name="unitPrice" id="unitPrice' + Line_No + '">\
+                                                        name="unitPrice" id="unitPrice' + Line_No +
+                            '">\
+                                                </div>\
+                                            </div>\
+                                            <div class="form-group">\
+                                                <label>Amount Inclusive of VAT <span class="text-danger">*</span></label>\
+                                                <div class="input-group">\
+                                                    <div class="input-group-prepend">\
+                                                        <div class="input-group-text">\
+                                                            <i class="fas fa-coins"></i>\
+                                                        </div>\
+                                                    </div>\
+                                                    <select class="form-control select2" name="isVATinclusive" id="isVATinclusive' +
+                            Line_No + '" required>\
+                                                            <option selected value="False">No</option>\
+                                                            <option selected value="True">Yes</option>\
+                                                     </select>\
                                                 </div>\
                                             </div>\
                                             <div class="form-group my-2">\
@@ -759,6 +779,7 @@
             var lineNo = $(this).find("[name='lineNo']").val();
             var unitPrice = $(this).find("[name='unitPrice']").val();
             var Vendor_No_ = $(this).find("[name='Vendor_No_']").val();
+            var isVATinclusive = $(this).find("[name='isVATinclusive']").val();
 
             showSpinner(lineNo);
 
@@ -772,6 +793,7 @@
                     lineNo: lineNo,
                     unitPrice: unitPrice,
                     Vendor_No_: Vendor_No_,
+                    isVATinclusive: isVATinclusive,
                     csrfmiddlewaretoken: csrf_token
                 },
                 success: function (data) {

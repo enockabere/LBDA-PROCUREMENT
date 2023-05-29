@@ -207,19 +207,26 @@ DASHBOARD
                                                 </td>
                                                 <script>
                                                     $(document).ready(function () {
-                                                        $("#TenderOpeningDate{{submit.Tender_No_}}")
-                                                            .empty().append(moment(
-                                                                    '{{submit.TenderOpeningDate}}',
-                                                                    "YYYY-MM-DD")
-                                                                .format(
+                                                        var openingDate = '{{submit.TenderOpeningDate}}';
+                                                        var closingDate = '{{submit.TenderClosingDate}}';
+
+                                                        if (openingDate === '0001-01-01' || closingDate ===
+                                                            '0001-01-01T00:00:00Z') {
+                                                            $("#TenderOpeningDate{{submit.Tender_No_}}").text(
+                                                                'N/A');
+                                                            $("#TenderClosingDate{{submit.Tender_No_}}").text(
+                                                                'N/A');
+                                                        } else {
+                                                            $("#TenderOpeningDate{{submit.Tender_No_}}")
+                                                                .empty().append(moment(openingDate,
+                                                                    "YYYY-MM-DD").format('Do MMM YYYY'));
+
+                                                            $("#TenderClosingDate{{submit.Tender_No_}}")
+                                                                .empty().append(moment(closingDate,
+                                                                    "YYYY-MM-DD").format(
                                                                     'Do MMM YYYY'));
-                                                        $("#TenderClosingDate{{submit.Tender_No_}}")
-                                                            .empty().append(moment(
-                                                                    '{{submit.TenderClosingDate}}',
-                                                                    "YYYY-MM-DD, h:mm:ss a")
-                                                                .format(
-                                                                    'Do MMM YYYY, h:mm a'));
-                                                    })
+                                                        }
+                                                    });
                                                 </script>
                                             </tr>
                                             {% endfor %}
