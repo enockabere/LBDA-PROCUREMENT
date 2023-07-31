@@ -23,7 +23,7 @@
 
 {% if authenticated == True %}
 <li class="nav-item">
-    <a href="/dashboard/" class="nav-link"><i class="fas fa-home"></i><span>Dashboard</span></a>
+    <a href="/eprocurement/dashboard/" class="nav-link"><i class="fas fa-home"></i><span>Dashboard</span></a>
 </li>
 {% if state == 'Vendor' %}
 <li class="nav-item dropdown">
@@ -38,7 +38,7 @@
 </li>
 {% endif %}
 <li class="nav-item">
-    <a href="/logout/" class="nav-link" data-toggle="tooltip" title="Sign Out"><i
+    <a href="/eprocurement/logout/" class="nav-link" data-toggle="tooltip" title="Sign Out"><i
             class="fas fa-sign-out-alt"></i><span>Sign
             Out</span></a>
 </li>
@@ -83,7 +83,8 @@
                                         <td id="TenderClosingDate{{tender.No}}">
                                             {{tender.TenderClosingDate}}
                                         </td>
-                                        <td><a href="/tdr/{{tender.No}}/" class="btn btn-primary">Detail</a>
+                                        <td><a href="/eprocurement/tdr/{{tender.No}}/"
+                                                class="btn btn-primary">Detail</a>
                                         </td>
                                         <script>
                                             $(document).ready(function () {

@@ -79,11 +79,11 @@
 
 {% if authenticated == True %}
 <li class="nav-item">
-    <a href="/dashboard/" class="nav-link"><i class="fas fa-home"></i><span>Dashboard</span></a>
+    <a href="/eprocurement/dashboard/" class="nav-link"><i class="fas fa-home"></i><span>Dashboard</span></a>
 </li>
 {% else %}
 <li class="nav-item">
-    <a href="/" class="nav-link"><i class="fas fa-home"></i><span>Home</span></a>
+    <a href="/eprocurement/" class="nav-link"><i class="fas fa-home"></i><span>Home</span></a>
 </li>
 {% endif %}
 {% endblock %}
@@ -240,7 +240,8 @@
                                         To submit bid, we kindly ask that you <a href="#" class="text-danger"
                                             data-toggle="modal" data-target="#signIn">sign
                                             in </a> to your account. Don't have an account? No worries! You can
-                                        easily create one by clicking the <a href="/register/" class="text-dark">sign
+                                        easily create one by clicking the <a href="/eprocurement/register/"
+                                            class="text-dark">sign
                                             up </a>
                                     </div>
                                 </div>
@@ -478,7 +479,7 @@
 
         function SecurityData(pk) {
             $.ajax({
-                url: "/FnCreateProspectiveSupplier/",
+                url: "/eprocurement/FnCreateProspectiveSupplier/",
                 type: "GET",
                 data: {
                     tenderNo: pk,
@@ -520,7 +521,7 @@
                 var inputValue = $(this).val();
                 $.ajax({
                     type: 'get',
-                    url: '/Receipts/',
+                    url: '/eprocurement/Receipts/',
                     dataType: 'json',
                     data: {
                         RequisitionNo: '{{response.RequisitionNo}}',
@@ -552,7 +553,7 @@
             }
             $spinner.show();
             $.ajax({
-                url: "/FnCreateProspectiveSupplier/",
+                url: "/eprocurement/FnCreateProspectiveSupplier/",
                 type: "POST",
                 data: {
                     Process_Type: $('#Process_Type').val(),
@@ -602,7 +603,7 @@
 
         function FinancialData(pk) {
             $.ajax({
-                url: "/FinancialBid/" + pk + "/",
+                url: "/eprocurement/FinancialBid/" + pk + "/",
                 type: "GET",
                 dataType: "json",
                 success: function (data) {
@@ -784,7 +785,7 @@
             showSpinner(lineNo);
 
             $.ajax({
-                url: "/FinancialBid/" + docNo + "/",
+                url: "/eprocurement/FinancialBid/" + docNo + "/",
                 type: "POST",
                 dataType: "json",
                 data: {
@@ -837,7 +838,7 @@
         function TechnicalRequirementsData(pk) {
             $("#attachmentsForm select[name='attachmentCode']").find('.after').nextAll().remove();
             $.ajax({
-                url: "/TechnicalRequirements/" + pk + "/",
+                url: "/eprocurement/TechnicalRequirements/" + pk + "/",
                 type: "GET",
                 dataType: "json",
                 success: function (data) {
@@ -876,7 +877,7 @@
             formData.append('attachmentCode', attachmentCode);
 
             $.ajax({
-                url: "/Attachments/" + documentID + "/",
+                url: "/eprocurement/Attachments/" + documentID + "/",
                 type: "POST",
                 data: formData,
                 processData: false,
@@ -921,7 +922,7 @@
 
         function Load_Attachments(pk) {
             $.ajax({
-                url: "/Attachments/" + pk + "/",
+                url: "/eprocurement/Attachments/" + pk + "/",
                 type: "GET",
                 dataType: "json",
                 success: function (data) {
@@ -1054,7 +1055,7 @@
             e.preventDefault();
             $spinner.show();
             $.ajax({
-                url: "/Submit/" + documentID + "/",
+                url: "/eprocurement/Submit/" + documentID + "/",
                 type: "POST",
                 data: {
                     Process_Type: $('#Process_Type1').val(),
@@ -1077,7 +1078,7 @@
                         $('#submit_first').empty().append('View');
                         $submitForm.hide();
                         $('#app_sent').show();
-                        window.location.href = "/dashboard/";
+                        window.location.href = "/eprocurement/dashboard/";
                     } else {
                         iziToast.show({
                             theme: 'dark',
@@ -1136,7 +1137,7 @@
         function get_rfq_lines() {
             var csrftoken = getCookie('csrftoken');
             $.ajax({
-                url: "/FnCreateProspectiveSupplier/",
+                url: "/eprocurement/FnCreateProspectiveSupplier/",
                 type: "POST",
                 data: {
                     Process_Type: '{{response.Process_Type}}',

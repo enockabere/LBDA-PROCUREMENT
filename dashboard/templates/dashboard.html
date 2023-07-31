@@ -16,14 +16,14 @@ DASHBOARD
 {% block navigation %}
 {% if authenticated == True %}
 <li class="nav-item active">
-    <a href="/dashboard/" type="button" class="nav-link">
+    <a href="/eprocurement/dashboard/" type="button" class="nav-link">
         <i class="fas fa-home br"></i>
         Dashboard
     </a>
 </li>
 {% else %}
 <li class="nav-item active">
-    <a href="/" type="button" class="nav-link">
+    <a href="/eprocurement/" type="button" class="nav-link">
         <i class="fas fa-home text-danger"></i>
         Home
     </a>
@@ -97,7 +97,8 @@ DASHBOARD
                                                     at <span class="text-danger"
                                                         id="Expected_Closing_Time{{tender.No}}">{{tender.Expected_Closing_Time}}</span>
                                                 </td>
-                                                <td><a href="/tdr/{{tender.No}}/" class="btn btn-primary">Detail</a>
+                                                <td><a href="/eprocurement/tdr/{{tender.No}}/"
+                                                        class="btn btn-primary">Detail</a>
                                                 </td>
                                                 <script>
                                                     $(document).ready(function () {
@@ -135,7 +136,7 @@ DASHBOARD
                                                     at <span class="text-danger"
                                                         id="Expected_Closing_Time{{tender.No}}">{{tender.Expected_Closing_Time}}</span>
                                                 </td>
-                                                <td class="text-center"><a href="/tdr/{{tender.No}}/"
+                                                <td class="text-center"><a href="/eprocurement/tdr/{{tender.No}}/"
                                                         class="btn btn-primary">Detail</a>
                                                 </td>
                                                 <script>
@@ -202,7 +203,8 @@ DASHBOARD
                                                 </td>
                                                 <td>{{submit.Tender_Security_Institution}}</td>
                                                 <td>{{submit.Tender_Security_Amount}}</td>
-                                                <td class="text-center"><a href="/tdr/{{submit.Tender_No_}}/"
+                                                <td class="text-center"><a
+                                                        href="/eprocurement/tdr/{{submit.Tender_No_}}/"
                                                         class="btn btn-primary">Detail</a>
                                                 </td>
                                                 <script>

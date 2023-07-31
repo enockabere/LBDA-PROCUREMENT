@@ -36,7 +36,7 @@
         <div class="main-wrapper container">
             <div class="navbar-bg"></div>
             <nav class="navbar navbar-expand-lg main-navbar">
-                <a href="/" class="navbar-brand sidebar-gone-hide">LBDA</a>
+                <a href="/eprocurement/" class="navbar-brand sidebar-gone-hide">LBDA</a>
                 <a href="#" class="nav-link sidebar-gone-show" data-toggle="sidebar"><i class="fas fa-bars"></i></a>
                 <div class="nav-collapse">
                     <a class="sidebar-gone-show nav-collapse-toggle nav-link" href="#">
@@ -54,7 +54,7 @@
             </nav>
             <nav class="navbar navbar-secondary navbar-expand-lg">
                 <div class="container">
-                    <a href="index.html" class="navbar-brand sidebar-gone-hide">
+                    <a href="/eprocurement/" class="navbar-brand sidebar-gone-hide">
                         <img src="../../static/img/logo/logo.jpeg" height="80" width="100"
                             class="img-fluid img-responsive" alt="Logo">
                     </a>
@@ -64,7 +64,7 @@
                         {% endblock %}
                         {% if ContactPage == False %}
                         <li class="nav-item">
-                            <a href="/Contact/" class="nav-link" data-toggle="tooltip" title="contact us">
+                            <a href="/eprocurement/Contact/" class="nav-link" data-toggle="tooltip" title="contact us">
                                 <span><i class="fas fa-envelope-open-text"></i> Contact Us </span>
                             </a>
                         </li>
@@ -81,7 +81,7 @@
                         </li>
                         {% else %}
                         <li class="nav-item">
-                            <a href="/logout/" class="nav-link" data-toggle="tooltip" title="Sign Out"><i
+                            <a href="/eprocurement/logout/" class="nav-link" data-toggle="tooltip" title="Sign Out"><i
                                     class="fas fa-sign-out-alt"></i><span>Sign
                                     Out</span></a>
                         </li>
@@ -105,7 +105,7 @@
                         </button>
                     </div>
                     <div class="modal-body">
-                        <form method="POST" action="/login/" novalidate>
+                        <form method="POST" action="/eprocurement/login/" novalidate>
                             {% csrf_token %}
                             <div class="form-group">
                                 <label>Supplier Email</label>
@@ -129,7 +129,8 @@
                                     <input type="password" class="form-control" placeholder="Password" name="password">
                                 </div>
                             </div>
-                            <p>Don't have an account? <a href="/register/" class="text-danger">Register</a></p>
+                            <p>Don't have an account? <a href="/eprocurement/register/" class="text-danger">Register</a>
+                            </p>
                             <div class="form-group my-2">
                                 <button type="submit" class="btn btn-primary btn-lg btn-block">
                                     Verify
@@ -150,7 +151,7 @@
                         </button>
                     </div>
                     <div class="modal-body">
-                        <form method="POST" action="/FnResetEmail/" novalidate>
+                        <form method="POST" action="/eprocurement/FnResetEmail/" novalidate>
                             {% csrf_token %}
                             <div class="form-group">
                                 <label>Supplier Email <span class="text-danger">*</span></label>
